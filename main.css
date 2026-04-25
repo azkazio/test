@@ -1,0 +1,795 @@
+* {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none; /* Menghilangkan menu copy-paste saat ditekan lama */
+}
+
+/* CSS Variables untuk Tema Otomatis (Light Mode Default) */
+:root {
+    --bg-color: #FFFFFF;
+    --card-bg: #DADBDD;
+    --text-primary: #000000;
+    --photo-profile: #DADBDD;
+    --border: #3A3B3C;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Variables untuk Dark Mode */
+body.dark-theme {
+    --bg-color: #1C1C1C;
+    --card-bg: #3A3B3C;
+    --text-primary: #FFFFFF;
+    --photo-profile: #3A3B3C;
+    --border: #DADBDD;
+    --shadow-color: rgba(0, 0, 0, 0.9);
+}
+
+/* Reset & Base Styles */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    
+    /* KUNCI SCROLL & REFRESH */
+    overflow: hidden; 
+    overscroll-behavior-y: none; 
+}
+
+.app-container {
+    width: 100%;
+    max-width: 428px;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+/* Header Layout */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 15px;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center; /* Memastikan foto dan teks sejajar horizontal */
+    gap: 12px; /* Jarak antara foto dan teks */
+}
+
+/* --- CSS BARU UNTUK FOTO PROFIL & SHADOW --- */
+
+/* 1. Pembungkus Foto (Untuk Border & Shadow) */
+.profile-pic-wrapper {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* Menjaga shadow tetap di dalam lingkaran */
+    
+    /* Border dan Warna Latar */
+    border: 3px solid var(--border); 
+    background-color: var(--photo-profile); 
+    padding: 2px;
+    
+    /* Efek Inner Shadow */
+    box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.4);
+    
+    cursor: pointer; 
+    transition: transform 0.2s ease, opacity 0.2s ease; 
+    -webkit-tap-highlight-color: transparent; 
+}
+
+/* Animasi saat ditekan */
+.profile-pic-wrapper:active {
+    transform: scale(0.90);
+    opacity: 0.8; 
+}
+
+/* 2. Gambar Aslinya */
+.profile-pic {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    /* Efek shadow tambahan langsung di fotonya agar lebih menyatu */
+    filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3)); 
+}
+
+/* 3. Ukuran Khusus saat Popup Profil Dibuka */
+.profile-pic-wrapper.popup-size {
+    width: 100px;
+    height: 100px;
+}
+
+/* --- Hapus CSS .profile-img-container img yang lama di baris 204 --- */
+/* Ganti menjadi ini agar posisinya tetap rapi: */
+.profile-img-container {
+    margin-top: -40px;
+    margin-bottom: 12px;
+    position: relative;
+    display: inline-block;
+}
+
+.user-text-wrapper {
+    display: flex;
+    flex-direction: column; /* Nama di atas, username di bawah */
+    justify-content: center;
+}
+
+.user-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.user-handle {
+    font-size: 13px;
+    color: #8E8E93; /* Warna abu-abu khas iOS */
+    font-weight: 400;
+    margin-top: 2px;
+}
+
+/* Hapus atau sembunyikan gaya lama yang tidak terpakai */
+.theme-toggle-btn {
+    display: none;
+}
+
+.theme-toggle-btn:active {
+    background-color: var(--shadow-color);
+}
+
+/* Grid Layout untuk Menu */
+.grid-menu {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+/* Styling Card Menu */
+.menu-card {
+    background-color: var(--card-bg);
+    border-radius: 20px;
+    padding: 30px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 12px var(--shadow-color);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: transform 0.2s ease, background-color 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.menu-card:active {
+    transform: scale(0.95);
+}
+
+/* Styling Ikon */
+.icon {
+    font-size: 42px;
+    margin-bottom: 14px;
+}
+
+/* Warna Ikon khas iOS */
+.icon-kerja   { color: #007AFF; }
+.icon-absensi { color: #FF3B30; }
+.icon-kasbon  { color: #34C759; }
+.icon-rincian { color: #FF9500; }
+.icon-gaji    { color: #FFCC00; }
+.icon-edit    { color: #AF52DE; }
+
+/* Judul Menu */
+.menu-title {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Overlay dengan efek blur total di belakang */
+.ios-overlay {
+  display: none; /* Sembunyi secara default */
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Kotak Modal Putih Transparan (Glassmorphism) */
+.ios-modal {
+  width: 280px;
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 14px;
+  overflow: hidden;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  animation: scaleUp 0.3s cubic-bezier(0.4, 0, 0.2, 1.5);
+}
+
+.ios-modal-content { padding: 20px; }
+.ios-modal-content h3 { margin: 0; font-size: 17px; font-weight: 600; }
+.ios-modal-content p { margin: 5px 0 0; font-size: 13px; color: #333; }
+
+/* Tombol Oke ala iOS */
+.ios-modal-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+}
+
+.ios-modal-footer button {
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  color: #007AFF;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ios-modal-footer button:active { background: rgba(0,0,0,0.05); }
+
+/* =========================================
+   STYLE UNTUK POPUP PROFIL (profil.js)
+   ========================================= */
+.profile-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.profile-card {
+    width: 320px;
+    background: var(--card-bg, #FFFFFF);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: var(--text-primary, #000);
+}
+
+.profile-banner {
+    height: 80px;
+    background: linear-gradient(135deg, #007AFF, #5AC8FA);
+}
+
+.modal-profile-info {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    padding: 0 20px 20px;
+    text-align: center;
+}
+
+.modal-profile-info h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.modal-profile-info .role {
+    margin: 4px 0 20px;
+    font-size: 14px;
+    color: #8E8E93;
+    font-weight: 500;
+}
+
+.data-grid {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+}
+
+.data-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-color, #F2F2F7);
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+.data-item span { color: #8E8E93; }
+.data-item p { margin: 0; font-weight: 600; }
+
+.profile-actions {
+    padding: 0 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn-settings {
+    background: #000000;
+    color: #FFFFFF;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.1s ease;
+}
+
+.btn-settings:active { transform: scale(0.96); }
+
+.btn-close-profile {
+    background: transparent;
+    border: none;
+    color: var(--text-primary, #000);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 10px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body.dark-theme .btn-settings { background: #FFFFFF; color: #000000; }
+body.dark-theme .data-item { background: #2C2C2E; }
+
+
+/* =========================================
+   STYLE UNTUK FORM INPUT (kerja.js & kasbon.js)
+   ========================================= */
+.ios-modal-form {
+    width: 320px;
+    background: var(--card-bg, #ffffff);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: var(--text-primary, #000);
+}
+
+.ios-modal-header {
+    padding: 20px 20px 10px;
+    text-align: center;
+    font-size: 18px;
+}
+
+.ios-modal-header h3 { margin: 0; font-weight: 600; }
+
+.ios-modal-body {
+    padding: 0 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: left;
+}
+
+.input-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #8E8E93;
+    text-transform: uppercase;
+}
+
+.input-group input, 
+.input-group textarea {
+    background: var(--bg-color, #F2F2F7);
+    border: 1px solid rgba(0,0,0,0.05);
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 16px;
+    color: var(--text-primary, #000);
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+    resize: none;
+}
+
+.input-group input:focus, 
+.input-group textarea:focus {
+    border-color: #007AFF;
+    background: var(--card-bg, #fff);
+}
+
+body.dark-theme .input-group input, 
+body.dark-theme .input-group textarea {
+    border-color: rgba(255,255,255,0.1);
+}
+
+.ios-modal-footer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--shadow-color, rgba(0,0,0,0.1));
+}
+
+.ios-modal-footer-grid button {
+    padding: 15px;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-primary, #000);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-batal { 
+    color: #ff3b30 !important; 
+    border-right: 1px solid var(--shadow-color, rgba(0,0,0,0.1)) !important; 
+}
+.btn-simpan { color: #007AFF !important; }
+
+.ios-modal-footer-grid button:active { background: rgba(0,0,0,0.05); }
+body.dark-theme .ios-modal-footer-grid button:active { background: rgba(255,255,255,0.05); }
+
+
+/* =========================================
+   STYLE UNTUK KALENDER PICKER (NEW PREMIUM VERSION)
+   ========================================= */
+.grid-kalender-container {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    padding: 10px;
+    justify-items: center;
+}
+
+.tgl-item-global {
+    width: 38px;
+    height: 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    box-sizing: border-box;
+    background: var(--bg-color);
+    color: var(--text-primary);
+}
+
+.tgl-item-global:hover {
+    background: var(--bg-color);
+}
+
+.tgl-item-global.minggu {
+    color: #FF3B30;
+}
+
+.tgl-item-global.today {
+    box-shadow: inset 0 0 0 2px #007AFF;
+}
+
+.tgl-item-global.selected {
+    background: #007AFF !important;
+    color: white !important;
+    box-shadow: 0 4px 10px rgba(0, 122, 255, 0.4);
+}
+
+.btn-text-batal {
+    background: none;
+    border: none;
+    color: #FF3B30;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    padding: 10px;
+    text-align: center;
+}
+
+
+/* =========================================
+   STYLE UNTUK IOS CENTER PICKER (Durasi/Kantor)
+   ========================================= */
+.ios-center-popup { width: 280px; background: var(--card-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 20px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.2); animation: popIn 0.3s cubic-bezier(0.4, 0, 0.2, 1.5); border: 1px solid var(--shadow-color); }
+.ios-popup-header { padding: 20px 15px 10px; font-size: 15px; font-weight: 700; text-align: center; color: var(--text-primary); }
+.ios-popup-body { max-height: 300px; overflow-y: auto; }
+.picker-list-item-center { padding: 15px; text-align: center; font-size: 17px; color: #007AFF; border-top: 1px solid var(--shadow-color); cursor: pointer; }
+.picker-list-item-center:active { background: var(--shadow-color); }
+.ios-popup-footer { border-top: 1px solid var(--shadow-color); }
+.ios-popup-footer button { width: 100%; padding: 15px; background: transparent; border: none; color: #ff3b30; font-size: 16px; font-weight: 600; cursor: pointer; }
+
+ /* =========================================
+   ANIMASI
+   ========================================= */
+ 
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleUp { from { transform: scale(1.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+@keyframes slideUp { 
+    from { transform: translateY(40px); opacity: 0; } 
+    to { transform: translateY(0); opacity: 1; } 
+}
+@keyframes scaleIn { 
+    from { transform: scale(0.8); opacity: 0; } 
+    to { transform: scale(1); opacity: 1; } 
+}
+
+@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* =========================================
+   STYLE UNTUK TAMPILAN FOTO FULL (profil.js)
+   ========================================= */
+
+/* Gaya untuk Klik Foto Fullscreen */
+.clickable-foto {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+.clickable-foto:active { transform: scale(0.95); }
+
+/* Fullscreen Overlay - Transparan Blur */
+.foto-full-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7); /* Transparan hitam */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 10005;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Container Full Mepet */
+.foto-full-container {
+    width: 100%; /* Mepet kiri kanan */
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.foto-full-img {
+    width: 100%; /* Memaksa lebar foto memenuhi layar */
+    height: auto;
+    max-height: 100vh;
+    object-fit: contain; /* Menjaga rasio agar foto tidak gepeng */
+    animation: scaleIn 0.3s cubic-bezier(0.1, 0.7, 0.1, 1);
+}
+
+/* Tombol X Tetap di Pojok Atas */
+.btn-close-foto-fixed {
+    position: fixed;
+    top: 40px; /* Jarak dari atas */
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+    z-index: 10006;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.btn-close-foto-fixed:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.profile-img-container {
+    position: relative;
+    display: inline-block;
+}
+
+.btn-edit-foto {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: #007AFF;
+    color: white;
+    border: 2px solid var(--card-bg);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.btn-edit-foto:active {
+    transform: scale(0.9);
+}
+
+/* =========================================
+   STYLE UNTUK VISUAL GRID PICKER (absen.js)
+   ========================================= */
+.grid-picker {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Membagi jadi 3 kolom rata */
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.grid-item {
+    background: var(--bg-color);
+    border: 1px solid var(--shadow-color);
+    padding: 10px 5px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Efek saat opsi dipilih */
+.grid-item.active {
+    background: #007AFF; /* Biru khas iOS */
+    color: #FFFFFF;
+    border-color: #007AFF;
+    transform: scale(0.95);
+}
+
+body.dark-theme .grid-item {
+    border-color: rgba(255,255,255,0.1);
+}
+
+/* =========================================
+   STYLE UNTUK LIST HASIL PENCARIAN (edit-data.js)
+   ========================================= */
+.data-list-card {
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+body.dark-theme .data-list-card {
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.data-list-info {
+    flex-grow: 1;
+}
+
+.data-list-info h4 { 
+    margin: 0 0 6px 0; 
+    font-size: 15px; 
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.data-list-info p { 
+    margin: 0 0 3px 0; 
+    font-size: 13px; 
+    color: #8E8E93; 
+    font-weight: 500;
+}
+
+.btn-icon-edit {
+    background: #007AFF; 
+    color: white; 
+    border: none;
+    width: 40px; 
+    height: 40px; 
+    border-radius: 50%;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: 0 4px 8px rgba(0, 122, 255, 0.3);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-icon-edit:active {
+    transform: scale(0.85);
+}
+
+/* --- LOGIN STYLE --- */
+.login-card {
+    animation: slideUpFade 0.5s cubic-bezier(0.1, 0.7, 0.1, 1);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#checkRemember {
+    border-color: #007AFF;
+}
+
+body.dark-theme .login-card {
+    background-color: #1C1C1E;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Membuat teks di dalam input selalu terlihat kecil */
+#loginUser, #regEmail, #regUser {
+    text-transform: lowercase;
+}
+
+/* Pastikan Kalender Visual berada di atas modal pengaturan */
+#calendarOverlay {
+    z-index: 30000 !important;
+}
+
+/* Memperbaiki tampilan input agar terlihat seperti tombol klik */
+#setDataDob:active {
+    background-color: rgba(142, 142, 147, 0.2) !important;
+}
+
+/* Menghapus highlight biru bawaan saat klik di HP */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Mengunci warna input saat fokus */
+.custom-box-input:focus, 
+textarea:focus, 
+input:focus {
+    background-color: var(--bg-color) !important; /* Tetap pakai warna tema */
+    color: var(--text-primary) !important;
+    outline: none !important; /* Hapus kotak biru default browser */
+    border: 2px solid #007AFF !important; /* Hanya ganti warna border saja */
+}
+
+/* Mengatasi perubahan warna akibat Autofill (pengisian otomatis) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text-primary) !important;
+    -webkit-box-shadow: 0 0 0px 1000px var(--bg-color) inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
