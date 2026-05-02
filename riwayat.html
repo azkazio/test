@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#fdfbff">
+  <title>Riwayat - KasirKu Pro</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    :root {
+      --md-sys-color-primary: #6200ea;
+      --md-sys-color-surface: #fdfbff;
+      --md-sys-color-surface-container: #f3edf7;
+      --md-sys-color-secondary-container: #e8def8;
+    }
+
+    body { margin: 0; background: var(--md-sys-color-surface); height: 100vh; overflow-y: auto; }
+
+    /* Top Bar */
+    .top-app-bar { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; background: white; z-index: 100; position: sticky; top: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
+    /* Sidebar Menu Ramping (240px) */
+    .offcanvas-start { 
+      width: 240px !important; 
+      border-radius: 0 20px 20px 0; 
+      border: none; 
+      box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+    }
+    
+    .menu-list { padding: 10px; }
+    .menu-item { 
+      display: flex; align-items: center; padding: 10px 16px; 
+      color: #444; text-decoration: none; border-radius: 12px; 
+      margin-bottom: 4px; transition: 0.2s; font-size: 14px;
+      border: 1px solid transparent;
+    }
+    .menu-item i { margin-right: 12px; font-size: 20px; color: #666; }
+    
+    /* Warna Aktif Menu */
+    .menu-item.active { 
+      background-color: var(--md-sys-color-secondary-container); 
+      color: var(--md-sys-color-primary); 
+      font-weight: bold;
+      border: 1px solid #ddd;
+    }
+    .menu-item.active i { color: var(--md-sys-color-primary); }
+    .menu-item:active { background-color: #eee; }
+
+    .main-content { padding: 16px; }
+
+    /* STRUK NOTA THERMAL */
+    .receipt {
+      background: white; margin: 0 auto; padding: 15px; color: black;
+      font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.3;
+      border: 1px dashed #ccc; width: 100%; max-width: 300px;
+    }
+    .garis-putus { border-bottom: 1px dashed black; margin: 8px 0; }
+    .item-row { margin-bottom: 5px; }
+    
+    /* Card Riwayat */
+    .native-card { background: #ffffff; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 12px; border: 1px solid #f0f0f0; transition: 0.2s; }
+    .native-card:active { transform: scale(0.98); background: #f9f9f9; }
+
+    /* --- Efek Skeleton Loading --- */
+    .skeleton {
+      background: #e0e0e0;
+      background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+      border-radius: 4px;
+      background-size: 200% 100%;
+      animation: 1.5s shine linear infinite;
+    }
+
+    @keyframes shine {
+      to { background-position-x: -200%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-app-bar">
+    <div class="d-flex align-items-center">
+      <i class="material-icons" data-bs-toggle="offcanvas" data-bs-target="#menuSidebar" style="cursor:pointer; font-size: 26px; margin-right: 12px;">more_vert</i>
+      <h6 class="m-0 fw-bold">Riwayat Penjualan</h6>
+    </div>
+    <i class="material-icons" onclick="loadRiwayat()" style="cursor:pointer;">refresh</i>
+  </div>
+  
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="menuSidebar">
+    <div class="offcanvas-header border-bottom py-3">
+      <h5 class="offcanvas-title fw-bold" style="color: var(--md-sys-color-primary); font-size: 18px;">KasirKu Pro</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0 d-flex flex-column">
+      <div class="menu-list" id="menuList"></div>
+      <div class="mt-auto p-3 border-top">
+        <a href="#" class="menu-item text-danger fw-bold" onclick="logout()">
+          <i class="material-icons text-danger">logout</i><span>Keluar Aplikasi</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+      <small class="text-secondary fw-bold" style="letter-spacing: 0.5px;">TRANSAKSI TERBARU</small>
+    </div>
+    <div id="listRiwayat"></div>
+  </div>
+
+  <div class="modal fade" id="modalNota" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border-radius:24px;">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Detail Transaksi</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div id="elemenNota" class="receipt text-start mb-3">
+            <div class="text-center mb-2">
+              <img id="strukLogo" src="" style="max-height: 45px; display: none; margin: 0 auto 5px auto;">
+              <strong id="strukNamaToko" style="font-size: 14px; text-transform: uppercase;">TOKO</strong><br>
+              <span id="strukAlamat" style="font-size: 10px;">Alamat</span><br>
+              <span id="strukWA" style="font-size: 10px;">Telp: -</span>
+            </div>
+            <div class="garis-putus"></div>
+            <div class="d-flex justify-content-between" style="font-size: 10px;">
+              <span id="strukTanggal">--</span>
+              <span id="strukID">--</span>
+            </div>
+            <div class="garis-putus"></div>
+            <div id="strukItems"></div>
+            <div class="garis-putus"></div>
+            <div class="d-flex justify-content-between fw-bold"><span>TOTAL</span><span id="strukTotal">0</span></div>
+            <div class="d-flex justify-content-between"><span>DIBAYAR</span><span id="strukBayar">0</span></div>
+            <div class="d-flex justify-content-between"><span>KEMBALI</span><span id="strukKembali">0</span></div>
+            <div class="garis-putus"></div>
+            <div class="text-center mt-2 mb-2"><img id="strukBarcode" src="" style="max-height: 60px; display: none; margin: 0 auto;"></div>
+            <div class="text-center mt-2" id="strukPesan" style="font-size: 10px;">Terima Kasih</div>
+          </div>
+          <div class="row g-2">
+            <div class="col-6"><button class="btn btn-outline-primary w-100 rounded-pill" onclick="printThermal()"><i class="material-icons align-middle fs-5">print</i> Print</button></div>
+            <div class="col-6"><button class="btn btn-success w-100 rounded-pill" onclick="kirimPDF()"><i class="material-icons align-middle fs-5">share</i> PDF / WA</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="spreadsheets.js"></script>
+  
+  <script>
+    let dataRiwayatObj = {}; 
+    let modalNota;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const auth = localStorage.getItem('isAuth');
+      const userData = JSON.parse(localStorage.getItem('userData'));
+      if (auth !== 'true' || !userData) { window.location.href = "index.html"; return; }
+      
+      setupMenu(userData.role);
+      
+      // Sinkronisasi Pengaturan Nota di Latar Belakang
+      tarikPengaturanDariCloud();
+      
+      modalNota = new bootstrap.Modal(document.getElementById('modalNota'));
+      loadRiwayat();
+    });
+
+    // FUNGSI SINKRONISASI PENGATURAN DARI CLOUD
+    async function tarikPengaturanDariCloud() {
+      try {
+        let res = await kirimKeAPI({ action: "getSettings" });
+        if (res && Object.keys(res).length > 0) {
+          localStorage.setItem('tokoNama', res.tokoNama || "");
+          localStorage.setItem('tokoAlamat', res.tokoAlamat || "");
+          localStorage.setItem('tokoWA', res.tokoWA || "");
+          localStorage.setItem('tokoPesan', res.tokoPesan || "");
+          if (res.tokoLogoImg) localStorage.setItem('tokoLogoImg', res.tokoLogoImg);
+          if (res.tokoBarcodeImg) localStorage.setItem('tokoBarcodeImg', res.tokoBarcodeImg);
+        }
+      } catch (error) {
+        console.error("Gagal sinkronisasi pengaturan nota:", error);
+      }
+    }
+
+    function setupMenu(role) {
+      const container = document.getElementById('menuList');
+      let html = "";
+      if (role === "Admin") {
+        html = `
+          <a href="dashboard.html" class="menu-item"><i class="material-icons">home</i>Dashboard</a>
+          <a href="kasir.html" class="menu-item"><i class="material-icons">point_of_sale</i>Mesin Kasir</a>
+          <a href="riwayat.html" class="menu-item active"><i class="material-icons">receipt_long</i>Riwayat</a>
+          <a href="stok.html" class="menu-item"><i class="material-icons">inventory_2</i>Stok Barang</a>
+          <a href="nota.html" class="menu-item"><i class="material-icons">settings</i>Setting Nota</a>
+        `;
+      } else {
+        html = `
+          <a href="kasir.html" class="menu-item"><i class="material-icons">point_of_sale</i>Mesin Kasir</a>
+          <a href="riwayat.html" class="menu-item active"><i class="material-icons">receipt_long</i>Riwayat Transaksi</a>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    function logout() { if(confirm("Keluar dari aplikasi?")) { localStorage.clear(); window.location.href = "index.html"; } }
+
+    // Fungsi pemroses data dari raw API ke Object (Untuk SWR)
+    function prosesDanRenderData(data) {
+      const container = document.getElementById('listRiwayat');
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        container.innerHTML = '<div class="text-center text-secondary py-4">Belum ada transaksi.</div>';
+        return;
+      }
+      
+      dataRiwayatObj = {};
+      data.forEach(trx => {
+        let trxId = trx[1];
+        if (!dataRiwayatObj[trxId]) {
+          dataRiwayatObj[trxId] = { 
+            waktu: trx[0], 
+            total: parseInt(trx[5]) || 0, 
+            bayar: parseInt(trx[6]) || 0, 
+            kembali: parseInt(trx[7]) || 0, 
+            items: [] 
+          };
+        }
+        dataRiwayatObj[trxId].items.push({ nama: trx[2], qty: trx[3], subtotal: trx[4] });
+      });
+      renderRiwayat();
+    }
+
+    // --- OPTIMASI LOADING: STALE-WHILE-REVALIDATE ---
+    async function loadRiwayat() {
+      const container = document.getElementById('listRiwayat');
+
+      // TAHAP 1: Cek Cache dari LocalStorage (Tampil Instan)
+      const cachedData = localStorage.getItem('riwayat_cache');
+      
+      if (cachedData) {
+        // Tampilkan langsung tanpa memuat ulang layar
+        prosesDanRenderData(JSON.parse(cachedData));
+      } else {
+        // TAHAP 2: Jika belum ada cache, Tampilkan Skeleton 
+        let skeletonHtml = '';
+        for(let i=0; i<6; i++) {
+          skeletonHtml += `
+          <div class="native-card d-flex justify-content-between align-items-center">
+            <div style="width: 60%;">
+              <div class="skeleton" style="height: 16px; width: 80%; margin-bottom: 6px;"></div>
+              <div class="skeleton" style="height: 12px; width: 50%;"></div>
+            </div>
+            <div class="text-end" style="width: 30%;">
+              <div class="skeleton" style="height: 16px; width: 100%; margin-bottom: 6px;"></div>
+              <div class="skeleton" style="height: 12px; width: 60%; margin-left: auto;"></div>
+            </div>
+          </div>`;
+        }
+        container.innerHTML = skeletonHtml;
+      }
+
+      // TAHAP 3: Ambil Data Terbaru dari Google Sheets (Background Fetch)
+      try {
+        let data = await kirimKeAPI({ action: "getTransaksi" });
+        if (data && Array.isArray(data)) {
+          // Update Cache
+          localStorage.setItem('riwayat_cache', JSON.stringify(data));
+          // Timpa UI (halus)
+          prosesDanRenderData(data);
+        } else if (!cachedData) {
+          container.innerHTML = '<div class="text-center text-danger py-4">Gagal memuat atau data kosong.</div>';
+        }
+      } catch (error) {
+        console.error("Gagal update riwayat di background:", error);
+        if (!cachedData) {
+          container.innerHTML = '<div class="text-center text-danger py-4">Gagal terhubung ke database.</div>';
+        }
+      }
+    }
+
+    function renderRiwayat() {
+      let html = '';
+      let keys = Object.keys(dataRiwayatObj).reverse(); 
+      if (keys.length === 0) {
+        document.getElementById('listRiwayat').innerHTML = '<div class="text-center text-secondary py-4">Belum ada transaksi.</div>';
+        return;
+      }
+      keys.forEach(trxId => {
+        let trx = dataRiwayatObj[trxId];
+        html += `
+        <div class="native-card d-flex justify-content-between align-items-center" onclick="bukaNota('${trxId}')" style="cursor:pointer;">
+          <div>
+            <div class="fw-bold" style="color:#333;">${trxId}</div>
+            <small class="text-secondary">${trx.waktu}</small>
+          </div>
+          <div class="text-end">
+            <div class="fw-bold text-primary">${formatRupiah(trx.total)}</div>
+            <small class="text-secondary">${trx.items.length} Item</small>
+          </div>
+        </div>`;
+      });
+      document.getElementById('listRiwayat').innerHTML = html;
+    }
+
+    function bukaNota(trxId) {
+      if(typeof triggerHaptic === "function") triggerHaptic(); 
+      let trx = dataRiwayatObj[trxId];
+      if(!trx) return;
+
+      document.getElementById('strukNamaToko').innerText = localStorage.getItem('tokoNama') || "TOKO";
+      document.getElementById('strukAlamat').innerText = localStorage.getItem('tokoAlamat') || "Alamat";
+      document.getElementById('strukWA').innerText = "Telp: " + (localStorage.getItem('tokoWA') || "-");
+      document.getElementById('strukTanggal').innerText = trx.waktu;
+      document.getElementById('strukID').innerText = trxId;
+      document.getElementById('strukPesan').innerText = localStorage.getItem('tokoPesan') || "Terima Kasih";
+
+      let itemsHtml = trx.items.map(i => `
+        <div class="item-row">
+          <div>${i.nama}</div>
+          <div class="d-flex justify-content-between">
+            <span>${i.qty} x ${(i.subtotal/i.qty).toLocaleString('id-ID')}</span>
+            <span>${parseInt(i.subtotal).toLocaleString('id-ID')}</span>
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('strukItems').innerHTML = itemsHtml;
+      document.getElementById('strukTotal').innerText = trx.total.toLocaleString('id-ID');
+      document.getElementById('strukBayar').innerText = trx.bayar.toLocaleString('id-ID');
+      document.getElementById('strukKembali').innerText = trx.kembali.toLocaleString('id-ID');
+      
+      let logo = localStorage.getItem('tokoLogoImg');
+      if(logo) { document.getElementById('strukLogo').src = logo; document.getElementById('strukLogo').style.display = 'block'; }
+      let bc = localStorage.getItem('tokoBarcodeImg');
+      if(bc) { document.getElementById('strukBarcode').src = bc; document.getElementById('strukBarcode').style.display = 'block'; }
+      modalNota.show();
+    }
+
+    function printThermal() {
+      let content = document.getElementById('elemenNota').innerHTML;
+      let original = document.body.innerHTML;
+      document.body.innerHTML = `<div class="receipt" style="width: 58mm; margin: 0;">${content}</div>`;
+      window.print();
+      document.body.innerHTML = original;
+      window.location.reload(); 
+    }
+
+    function kirimPDF() {
+      const el = document.getElementById('elemenNota');
+      const opt = { margin: 2, filename: `Nota_${document.getElementById('strukID').innerText}.pdf`, jsPDF: { unit: 'mm', format: [58, 150], orientation: 'portrait' } };
+      html2pdf().set(opt).from(el).output('blob').then(function(blob) {
+        const file = new File([blob], opt.filename, { type: "application/pdf" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: `Nota Transaksi` });
+        } else { html2pdf().set(opt).from(el).save(); }
+      });
+    }
+  </script>
+</body>
+</html>

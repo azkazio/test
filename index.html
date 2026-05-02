@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#6200ea">
+  <title>Login - KasirKu Pro</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { background: #f4f7fe; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    .login-card { width: 100%; max-width: 350px; background: white; border-radius: 28px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
+    .btn-native { background: #6200ea; color: white; border-radius: 100px; padding: 12px; border: none; width: 100%; font-weight: bold; margin-top: 20px; }
+    .native-input { background: #f3edf7; border: none; border-bottom: 2px solid #79747e; padding: 12px; width: 100%; margin-bottom: 15px; outline: none; transition: 0.3s; }
+    .native-input:focus { border-bottom-color: #6200ea; background: #ede7f6; }
+    
+    #loading-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #f4f7fe; display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loading-overlay">
+    <div class="text-center">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-2 text-secondary small">Memeriksa sesi...</p>
+    </div>
+  </div>
+
+  <div class="login-card">
+    <i class="material-icons" style="font-size: 50px; color: #6200ea;">storefront</i>
+    <h4 class="fw-bold mt-2">KasirKu Pro</h4>
+    <p class="text-secondary small mb-4">Masuk untuk mengelola tokomu</p>
+
+    <div class="text-start">
+      <label class="small fw-bold text-secondary ms-1">Username</label>
+      <input type="text" id="user" class="native-input" placeholder="Username" oninput="this.value = this.value.toLowerCase()">
+      
+      <label class="small fw-bold text-secondary ms-1">Password</label>
+      <input type="password" id="pass" class="native-input" placeholder="••••••••">
+    </div>
+
+    <button id="btnLogin" class="btn-native" onclick="doLogin()">Masuk Sekarang</button>
+  </div>
+
+  <script src="spreadsheets.js"></script>
+  <script>
+    // --- 1. PENGECEKAN SESI OTOMATIS ---
+    window.addEventListener('DOMContentLoaded', () => {
+      const isAuth = localStorage.getItem('isAuth');
+      const userData = JSON.parse(localStorage.getItem('userData'));
+      
+      if (isAuth === 'true' && userData) {
+        // Redirect otomatis berdasarkan role yang tersimpan
+        if (userData.role === "Admin") {
+          window.location.href = "dashboard.html";
+        } else {
+          window.location.href = "kasir.html";
+        }
+      } else {
+        document.getElementById('loading-overlay').style.display = 'none';
+      }
+    });
+
+    // --- 2. FUNGSI LOGIN ---
+    async function doLogin() {
+      const u = document.getElementById('user').value.trim().toLowerCase(); // Pastikan kecil & tanpa spasi
+      const p = document.getElementById('pass').value;
+      const btn = document.getElementById('btnLogin');
+
+      if(!u || !p) return alert("Username dan Password tidak boleh kosong!");
+
+      btn.innerText = "Memverifikasi...";
+      btn.disabled = true;
+
+      const res = await kirimKeAPI({ action: "login", username: u, password: p });
+
+      if(res && res.status === "success") {
+        // Simpan data login
+        localStorage.setItem('isAuth', 'true');
+        localStorage.setItem('userData', JSON.stringify(res.user));
+        
+        // PENGALIHAN BERDASARKAN ROLE
+        if (res.user.role === "Admin") {
+          window.location.href = "dashboard.html";
+        } else {
+          window.location.href = "kasir.html";
+        }
+      } else {
+        alert(res ? res.message : "Gagal terhubung ke server. Periksa koneksi.");
+        btn.innerText = "Masuk Sekarang";
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#fdfbff">
+  <title>Dashboard - KasirKu</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --md-sys-color-primary: #6200ea;
+      --md-sys-color-surface: #fdfbff;
+      --md-sys-color-surface-container: #f3edf7;
+      --md-sys-color-secondary-container: #e8def8;
+    }
+
+    body { margin: 0; background: var(--md-sys-color-surface); overflow-x: hidden; }
+
+    /* Top Bar */
+    .top-app-bar { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; background: white; z-index: 100; position: sticky; top: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
+    /* Sidebar Menu Ramping & Sesuai Garis */
+    .offcanvas-start { 
+      width: 240px !important; 
+      border-radius: 0 20px 20px 0; 
+      border: none; 
+      box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+    }
+    
+    .menu-list { padding: 10px; }
+    .menu-item { 
+      display: flex; align-items: center; padding: 10px 16px; 
+      color: #444; text-decoration: none; border-radius: 12px; 
+      margin-bottom: 4px; transition: 0.2s; font-size: 14px;
+      border: 1px solid transparent;
+    }
+    .menu-item i { margin-right: 12px; font-size: 20px; color: #666; }
+    
+    /* Menu Aktif */
+    .menu-item.active { 
+      background-color: var(--md-sys-color-secondary-container); 
+      color: var(--md-sys-color-primary); 
+      font-weight: bold;
+      border: 1px solid #ddd; 
+    }
+    .menu-item.active i { color: var(--md-sys-color-primary); }
+    .menu-item:active { background-color: #eee; }
+
+    .main-content { padding: 16px; }
+    .native-card { background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 16px; border: 1px solid #f0f0f0; }
+
+    /* --- TAMBAHAN: Efek Skeleton Loading --- */
+    .skeleton {
+      background: #e0e0e0;
+      background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+      border-radius: 4px;
+      background-size: 200% 100%;
+      animation: 1.5s shine linear infinite;
+      color: transparent !important; /* Sembunyikan teks asli saat loading */
+      display: inline-block;
+    }
+
+    @keyframes shine {
+      to { background-position-x: -200%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-app-bar">
+    <div class="d-flex align-items-center">
+      <i class="material-icons" data-bs-toggle="offcanvas" data-bs-target="#menuSidebar" style="cursor:pointer; font-size: 26px;">more_vert</i>
+      <h6 class="m-0 fw-bold ms-3">Beranda</h6>
+    </div>
+    <i class="material-icons" style="color: #49454f;">account_circle</i>
+  </div>
+
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="menuSidebar">
+    <div class="offcanvas-header border-bottom py-3">
+      <h5 class="offcanvas-title fw-bold" style="color: var(--md-sys-color-primary); font-size: 18px;">KasirKu Pro</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0 d-flex flex-column">
+      <div class="menu-list" id="menuList">
+        </div>
+      
+      <div class="mt-auto p-3 border-top">
+        <a href="#" class="menu-item text-danger fw-bold" onclick="logout()">
+          <i class="material-icons text-danger">logout</i><span>Keluar Aplikasi</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="mt-2 mb-4">
+      <h2 class="fw-bold m-0" style="color: var(--md-sys-color-primary); font-size: 24px;">Halo, <span id="namaUser">User</span>!</h2>
+      <p class="text-secondary small" id="roleUser">Memuat role...</p>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-6">
+        <div class="native-card bg-primary text-white mb-0 h-100" style="background-color: var(--md-sys-color-primary) !important; border:none;">
+          <small style="opacity: 0.8;">Pendapatan</small>
+          <h5 id="totalPendapatan" class="fw-bold mt-1 mb-0">Rp 0</h5>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="native-card mb-0 h-100" style="background-color: var(--md-sys-color-secondary-container);">
+          <small style="color: var(--md-sys-color-on-secondary-container);">Terjual</small>
+          <h5 id="totalTerjual" class="fw-bold mt-1 mb-0 text-dark">0 Item</h5>
+        </div>
+      </div>
+    </div>
+
+    <div class="native-card">
+      <h6 class="fw-bold mb-3" style="font-size: 14px; color: #444;">Grafik Penjualan Barang</h6>
+      <div style="height: 220px; width: 100%;">
+        <canvas id="chartPenjualan"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="spreadsheets.js"></script>
+  <script>
+    // --- 1. PROTEKSI SESI ---
+    const auth = localStorage.getItem('isAuth');
+    const userData = JSON.parse(localStorage.getItem('userData'));
+
+    if (auth !== 'true' || !userData) {
+      window.location.href = "index.html";
+    } else {
+      document.getElementById('namaUser').innerText = userData.nama;
+      document.getElementById('roleUser').innerText = userData.role;
+      setupMenu(userData.role);
+    }
+
+    // --- 2. SETUP MENU ---
+    function setupMenu(role) {
+      const menuContainer = document.getElementById('menuList');
+      let htmlMenu = "";
+
+      if (role === "Admin") {
+        htmlMenu = `
+          <a href="dashboard.html" class="menu-item active"><i class="material-icons">home</i>Dashboard</a>
+          <a href="kasir.html" class="menu-item"><i class="material-icons">point_of_sale</i>Mesin Kasir</a>
+          <a href="riwayat.html" class="menu-item"><i class="material-icons">receipt_long</i>Riwayat</a>
+          <a href="stok.html" class="menu-item"><i class="material-icons">inventory_2</i>Stok Barang</a>
+          <a href="nota.html" class="menu-item"><i class="material-icons">settings</i>Setting Nota</a>
+        `;
+      } else {
+        htmlMenu = `
+          <a href="kasir.html" class="menu-item"><i class="material-icons">point_of_sale</i>Mesin Kasir</a>
+          <a href="riwayat.html" class="menu-item"><i class="material-icons">receipt_long</i>Riwayat Transaksi</a>
+        `;
+      }
+      menuContainer.innerHTML = htmlMenu;
+    }
+
+    function logout() {
+      if(confirm("Keluar dari akun Anda?")) {
+        localStorage.clear();
+        window.location.href = "index.html";
+      }
+    }
+
+    // --- 3. OPTIMASI LOADING: STALE-WHILE-REVALIDATE ---
+    let chartInstance = null;
+
+    // Fungsi terpisah untuk mengkalkulasi dan mencetak data ke UI
+    function updateUI(res) {
+      const elPendapatan = document.getElementById('totalPendapatan');
+      const elTerjual = document.getElementById('totalTerjual');
+
+      if(!res || !Array.isArray(res) || res.length === 0) {
+        elPendapatan.innerText = "Rp 0";
+        elTerjual.innerText = "0 Item";
+        elPendapatan.classList.remove('skeleton');
+        elTerjual.classList.remove('skeleton');
+        return;
+      }
+
+      let totalUang = 0;
+      let totalItem = 0;
+      let rekapBarang = {};
+
+      res.forEach(trx => {
+        let qty = parseInt(trx[3]) || 0;
+        let subtotal = parseInt(trx[4]) || 0;
+        let namaBrg = trx[2] || "Lainnya";
+
+        totalUang += subtotal;
+        totalItem += qty;
+        rekapBarang[namaBrg] = (rekapBarang[namaBrg] || 0) + qty;
+      });
+
+      // Tampilkan data menggunakan fungsi format dari spreadsheets.js
+      elPendapatan.innerText = formatRupiah(totalUang);
+      elTerjual.innerText = totalItem + " Item";
+
+      // Hapus efek skeleton jika ada
+      elPendapatan.classList.remove('skeleton');
+      elTerjual.classList.remove('skeleton');
+
+      renderChart(rekapBarang);
+    }
+
+    async function loadDashboard() {
+      const elPendapatan = document.getElementById('totalPendapatan');
+      const elTerjual = document.getElementById('totalTerjual');
+
+      // TAHAP 1: Cek Cache di LocalStorage agar tampil INSTAN
+      const cachedData = localStorage.getItem('dashboard_cache');
+      
+      if (cachedData) {
+        // Tampilkan data lama langsung tanpa loading screen
+        updateUI(JSON.parse(cachedData));
+      } else {
+        // TAHAP 2: Jika belum ada cache, munculkan efek SKELETON
+        elPendapatan.classList.add('skeleton');
+        elTerjual.classList.add('skeleton');
+        // Isi dengan karakter random agar kotak skeleton terbentuk sesuai ukurannya
+        elPendapatan.innerText = "Rp 000.000"; 
+        elTerjual.innerText = "000 Item";
+      }
+      
+      // TAHAP 3: Tarik data terbaru dari API Google Sheets di Background
+      try {
+        let res = await kirimKeAPI({ action: "getTransaksi" });
+        
+        // Pastikan balasan adalah array yang valid
+        if (res && Array.isArray(res)) {
+          // Update Cache dengan data paling baru
+          localStorage.setItem('dashboard_cache', JSON.stringify(res));
+          // Timpa UI lama dengan data yang paling baru secara halus
+          updateUI(res);
+        } else {
+          console.warn("Data kosong atau format salah:", res);
+          updateUI([]);
+        }
+      } catch (error) {
+        console.error("Gagal refresh data di background:", error);
+        elPendapatan.classList.remove('skeleton');
+        elTerjual.classList.remove('skeleton');
+      }
+    }
+
+    function renderChart(dataRekap) {
+      const ctx = document.getElementById('chartPenjualan').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(dataRekap),
+          datasets: [{
+            data: Object.values(dataRekap),
+            backgroundColor: '#6200ea',
+            borderRadius: 6,
+            barThickness: 18
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { borderDash: [5, 5], drawBorder: false } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    window.onload = loadDashboard;
+  </script>
+</body>
+</html>

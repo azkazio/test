@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#fdfbff">
+  <title>Stok - KasirKu Pro</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  
+  <style>
+    :root {
+      --md-sys-color-primary: #6200ea;
+      --md-sys-color-surface: #fdfbff;
+      --md-sys-color-surface-container: #f3edf7;
+      --md-sys-color-secondary-container: #e8def8;
+      --md-sys-color-error: #b3261e;
+    }
+
+    body { margin: 0; background: var(--md-sys-color-surface); height: 100vh; overflow-y: auto; }
+
+    /* Top Bar */
+    .top-app-bar { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; background: white; z-index: 100; position: sticky; top: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
+    /* Sidebar Menu Ramping & Sesuai Garis */
+    .offcanvas-start { 
+      width: 240px !important; 
+      border-radius: 0 20px 20px 0; 
+      border: none; 
+      box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+    }
+    
+    .menu-list { padding: 10px; }
+    .menu-item { 
+      display: flex; align-items: center; padding: 10px 16px; 
+      color: #444; text-decoration: none; border-radius: 12px; 
+      margin-bottom: 4px; transition: 0.2s; font-size: 14px;
+      border: 1px solid transparent;
+    }
+    .menu-item i { margin-right: 12px; font-size: 20px; color: #666; }
+    
+    /* Menu Aktif */
+    .menu-item.active { 
+      background-color: var(--md-sys-color-secondary-container); 
+      color: var(--md-sys-color-primary); 
+      font-weight: bold;
+      border: 1px solid #ddd;
+    }
+    .menu-item.active i { color: var(--md-sys-color-primary); }
+    .menu-item:active { background-color: #eee; }
+
+    /* Content */
+    .main-content { padding: 16px; padding-bottom: 90px; }
+    .native-card { background: #ffffff; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 12px; border: 1px solid #f0f0f0; }
+    
+    /* FAB */
+    .fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; background-color: var(--md-sys-color-primary); color: white; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(98,0,234,0.3); border: none; cursor: pointer; z-index: 999; transition: 0.2s; }
+    .fab:active { transform: scale(0.95); }
+
+    /* Modal Material Style */
+    .modal-content { border-radius: 24px; border: none; padding: 8px; }
+    .native-input { background-color: var(--md-sys-color-surface-container); border: none; border-bottom: 2px solid #79747e; border-radius: 4px 4px 0 0; padding: 12px 16px; width: 100%; outline: none; transition: 0.2s; font-size: 14px; margin-bottom: 16px; }
+    .native-input:focus { border-bottom-color: var(--md-sys-color-primary); }
+    .btn-native { background-color: var(--md-sys-color-primary); color: white; border-radius: 100px; padding: 12px; border: none; font-weight: bold; width: 100%; box-shadow: 0 2px 5px rgba(98,0,234,0.3); }
+
+    /* Kategori List */
+    .kategori-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+
+    /* --- TAMBAHAN: Efek Skeleton Loading --- */
+    .skeleton {
+      background: #e0e0e0;
+      background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+      border-radius: 4px;
+      background-size: 200% 100%;
+      animation: 1.5s shine linear infinite;
+    }
+
+    @keyframes shine {
+      to { background-position-x: -200%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-app-bar">
+    <div class="d-flex align-items-center">
+      <i class="material-icons" data-bs-toggle="offcanvas" data-bs-target="#menuSidebar" style="cursor:pointer; font-size: 26px; margin-right: 12px;">more_vert</i>
+      <h6 class="m-0 fw-bold">Manajemen Stok</h6>
+    </div>
+    <i class="material-icons" onclick="loadTabelStok()" style="cursor:pointer;">refresh</i>
+  </div>
+  
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="menuSidebar">
+    <div class="offcanvas-header border-bottom py-3">
+      <h5 class="offcanvas-title fw-bold" style="color: var(--md-sys-color-primary); font-size: 18px;">KasirKu Pro</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0 d-flex flex-column">
+      <div class="menu-list" id="menuList">
+        </div>
+      <div class="mt-auto p-3 border-top">
+        <a href="#" class="menu-item text-danger fw-bold" onclick="logout()">
+          <i class="material-icons text-danger">logout</i><span>Keluar Aplikasi</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="native-card py-2 px-3 d-flex align-items-center mb-3" style="background: var(--md-sys-color-surface-container); border:none;">
+      <i class="material-icons text-secondary me-2">search</i>
+      <input type="text" id="cariStok" class="border-0 bg-transparent w-100" placeholder="Cari nama barang..." style="outline:none; font-size: 14px;">
+    </div>
+
+    <div id="containerStok">
+      </div>
+  </div>
+
+  <button class="fab" onclick="bukaModalTambah()">
+    <i class="material-icons">add</i>
+  </button>
+
+  <div class="modal fade" id="modalBarang" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold" id="judulModalBarang">Tambah Barang Baru</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label class="small fw-bold text-secondary">ID / Barcode</label>
+          <input type="text" id="inputID" class="native-input" placeholder="BRG-001">
+          
+          <label class="small fw-bold text-secondary">Nama Barang</label>
+          <input type="text" id="inputNama" class="native-input" placeholder="Contoh: Kopi Susu">
+          
+          <label class="small fw-bold text-secondary d-flex justify-content-between align-items-center">
+            <span>Kategori</span>
+            <span class="text-primary" style="cursor:pointer;" onclick="bukaKelolaKategori()"><i class="material-icons" style="font-size:14px; vertical-align:middle;">edit</i> Kelola Kategori</span>
+          </label>
+          <select id="inputKategori" class="native-input" style="appearance: none;"></select>
+          
+          <div class="row g-2">
+            <div class="col-7">
+              <label class="small fw-bold text-secondary">Harga Jual (Rp)</label>
+              <input type="number" id="inputHarga" class="native-input" placeholder="0">
+            </div>
+            <div class="col-5">
+              <label class="small fw-bold text-secondary">Stok</label>
+              <input type="number" id="inputStok" class="native-input" placeholder="0">
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mt-2">
+            <button id="btnHapus" class="btn btn-outline-danger rounded-pill px-4" style="display:none;" onclick="hapusStok()"><i class="material-icons align-middle fs-6">delete</i> Hapus</button>
+            <button class="btn-native flex-grow-1 ms-2" id="btnSimpan" onclick="simpanStok()">Simpan Barang</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalKategori" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0 pb-0">
+          <h6 class="modal-title fw-bold">Kelola Kategori</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex mb-3">
+            <input type="text" id="inputKategoriBaru" class="native-input mb-0 rounded-0 rounded-start" placeholder="Nama baru...">
+            <button class="btn btn-primary rounded-0 rounded-end px-3" onclick="tambahKategori()"><i class="material-icons align-middle">add</i></button>
+          </div>
+          <div style="max-height: 250px; overflow-y:auto;" id="listKategori"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="spreadsheets.js"></script>
+  
+  <script>
+    let dataStok = [];
+    let daftarKategori = JSON.parse(localStorage.getItem('kategoriBarang')) || ["Makanan", "Minuman", "Umum"];
+    let isEditMode = false;
+    let modalBarang, modalKategori;
+
+    // --- 1. PROTEKSI SESI & NAVIGASI DINAMIS ---
+    window.addEventListener('DOMContentLoaded', () => {
+      const auth = localStorage.getItem('isAuth');
+      const userData = JSON.parse(localStorage.getItem('userData'));
+
+      if (auth !== 'true' || !userData) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      // Proteksi Khusus: Stok hanya untuk Admin
+      if (userData.role !== "Admin") {
+        alert("Akses Ditolak: Hanya Admin yang dapat mengelola stok.");
+        window.location.href = "kasir.html";
+        return;
+      }
+
+      setupMenu(userData.role);
+      modalBarang = new bootstrap.Modal(document.getElementById('modalBarang'));
+      modalKategori = new bootstrap.Modal(document.getElementById('modalKategori'));
+      
+      syncKategoriDropdown();
+      loadTabelStok();
+    });
+
+    function setupMenu(role) {
+      const container = document.getElementById('menuList');
+      container.innerHTML = `
+        <a href="dashboard.html" class="menu-item"><i class="material-icons">home</i>Dashboard</a>
+        <a href="kasir.html" class="menu-item"><i class="material-icons">point_of_sale</i>Mesin Kasir</a>
+        <a href="riwayat.html" class="menu-item"><i class="material-icons">receipt_long</i>Riwayat</a>
+        <a href="stok.html" class="menu-item active"><i class="material-icons">inventory_2</i>Stok Barang</a>
+        <a href="nota.html" class="menu-item"><i class="material-icons">settings</i>Setting Nota</a>
+      `;
+    }
+
+    function logout() {
+      if(confirm("Keluar dari aplikasi?")) {
+        localStorage.clear();
+        window.location.href = "index.html";
+      }
+    }
+
+    // --- 2. OPTIMASI LOGIKA STOK DENGAN CACHE & SKELETON ---
+    async function loadTabelStok() {
+      const container = document.getElementById('containerStok');
+
+      // TAHAP 1: Cek Cache dari LocalStorage agar tampil INSTAN
+      const cachedData = localStorage.getItem('stok_cache');
+      
+      if (cachedData) {
+        // Tampilkan seketika dari cache
+        dataStok = JSON.parse(cachedData);
+        renderStok(dataStok);
+      } else {
+        // TAHAP 2: Jika belum ada cache, munculkan efek SKELETON
+        let skeletonHtml = '';
+        for(let i=0; i<6; i++) {
+          skeletonHtml += `
+          <div class="native-card d-flex justify-content-between align-items-center">
+            <div style="width: 60%;">
+              <div class="skeleton" style="height: 16px; width: 70%; margin-bottom: 6px;"></div>
+              <div class="skeleton" style="height: 12px; width: 40%;"></div>
+            </div>
+            <div class="text-end" style="width: 30%;">
+              <div class="skeleton" style="height: 22px; width: 80%; border-radius: 50px; margin-left: auto; margin-bottom: 8px;"></div>
+              <div class="skeleton" style="height: 14px; width: 50%; margin-left: auto;"></div>
+            </div>
+          </div>`;
+        }
+        container.innerHTML = skeletonHtml;
+      }
+
+      // TAHAP 3: Tarik data terbaru dari Google Sheets di Background
+      try {
+        let res = await kirimKeAPI({ action: "getStok" });
+        if (res && Array.isArray(res)) {
+          dataStok = res;
+          // Update Cache dengan data stok paling baru
+          localStorage.setItem('stok_cache', JSON.stringify(dataStok));
+          // Refresh list UI agar tersinkronisasi jika ada perubahan
+          renderStok(dataStok);
+        } else if (!cachedData) {
+          container.innerHTML = '<div class="text-center text-danger py-4">Gagal memuat stok.</div>';
+        }
+      } catch (error) {
+        console.error("Gagal update stok di background:", error);
+        if (!cachedData) {
+          container.innerHTML = '<div class="text-center text-danger py-4">Gagal terhubung ke database.</div>';
+        }
+      }
+    }
+
+    function renderStok(data) {
+      let html = '';
+      if(data.length === 0) {
+        html = '<div class="text-center text-secondary py-4">Belum ada data barang.</div>';
+      } else {
+        data.forEach(item => {
+          let badgeColor = item[4] <= 5 ? 'bg-danger' : 'bg-success';
+          html += `
+          <div class="native-card d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-bold">${item[1]}</div>
+              <small class="text-secondary">${item[2]} • ${formatRupiah(item[3])}</small>
+            </div>
+            <div class="text-end">
+              <div class="badge rounded-pill ${badgeColor} px-3">Sisa: ${item[4]}</div>
+              <div class="mt-2 text-primary" style="cursor:pointer;" onclick="bukaModalEdit('${item[0]}', '${item[1]}', '${item[2]}', ${item[3]}, ${item[4]})">
+                <i class="material-icons fs-5 align-middle">edit</i> <span class="small fw-bold align-middle">Edit</span>
+              </div>
+            </div>
+          </div>`;
+        });
+      }
+      document.getElementById('containerStok').innerHTML = html;
+    }
+
+    document.getElementById('cariStok').addEventListener('input', function(e) {
+      let kw = e.target.value.toLowerCase();
+      renderStok(dataStok.filter(i => i[1].toLowerCase().includes(kw) || i[0].toLowerCase().includes(kw)));
+    });
+
+    function bukaModalTambah() {
+      isEditMode = false;
+      document.getElementById('judulModalBarang').innerText = "Tambah Barang";
+      document.getElementById('inputID').value = "BRG" + Date.now().toString().slice(-5);
+      document.getElementById('inputID').readOnly = false;
+      document.getElementById('inputNama').value = "";
+      document.getElementById('inputHarga').value = "";
+      document.getElementById('inputStok').value = "";
+      document.getElementById('btnHapus').style.display = 'none';
+      modalBarang.show();
+    }
+
+    function bukaModalEdit(id, nama, kat, harga, stok) {
+      isEditMode = true;
+      document.getElementById('judulModalBarang').innerText = "Edit Barang";
+      document.getElementById('inputID').value = id;
+      document.getElementById('inputID').readOnly = true;
+      document.getElementById('inputNama').value = nama;
+      document.getElementById('inputKategori').value = kat;
+      document.getElementById('inputHarga').value = harga;
+      document.getElementById('inputStok').value = stok;
+      document.getElementById('btnHapus').style.display = 'block';
+      modalBarang.show();
+    }
+
+    async function simpanStok() {
+      let payload = {
+        action: isEditMode ? "editBarang" : "simpanBarang",
+        id: document.getElementById('inputID').value,
+        nama: document.getElementById('inputNama').value,
+        kategori: document.getElementById('inputKategori').value,
+        harga: document.getElementById('inputHarga').value,
+        stok: document.getElementById('inputStok').value
+      };
+      if(!payload.nama || !payload.harga) return alert("Lengkapi data!");
+      let btn = document.getElementById('btnSimpan');
+      btn.innerText = "Proses..."; btn.disabled = true;
+      
+      let res = await kirimKeAPI(payload);
+      
+      btn.innerText = "Simpan Barang"; btn.disabled = false;
+      if(res && res.status === "success") { 
+        modalBarang.hide(); 
+        loadTabelStok(); // Panggil fungsi loading agar me-refresh cache dan background
+      } else {
+        alert("Gagal menyimpan barang.");
+      }
+    }
+
+    async function hapusStok() {
+      if(!confirm("Hapus barang permanen?")) return;
+      
+      let id = document.getElementById('inputID').value;
+      let btn = document.getElementById('btnHapus');
+      btn.disabled = true;
+      
+      let res = await kirimKeAPI({ action: "hapusBarang", id });
+      
+      btn.disabled = false;
+      if(res && res.status === "success") { 
+        modalBarang.hide(); 
+        loadTabelStok(); 
+      } else {
+        alert("Gagal menghapus barang.");
+      }
+    }
+
+    function syncKategoriDropdown() {
+      document.getElementById('inputKategori').innerHTML = daftarKategori.map(k => `<option value="${k}">${k}</option>`).join('');
+    }
+
+    function bukaKelolaKategori() { renderListKategoriModal(); modalKategori.show(); }
+
+    function renderListKategoriModal() {
+      document.getElementById('listKategori').innerHTML = daftarKategori.map((k, i) => `
+        <div class="kategori-item">
+          <span>${k}</span>
+          <div>
+            <i class="material-icons text-primary ms-2" style="cursor:pointer;" onclick="editKategori(${i})">edit</i>
+            <i class="material-icons text-danger ms-2" style="cursor:pointer;" onclick="hapusKategori(${i})">delete</i>
+          </div>
+        </div>`).join('');
+    }
+
+    function tambahKategori() {
+      let v = document.getElementById('inputKategoriBaru').value.trim();
+      if(v && !daftarKategori.includes(v)) {
+        daftarKategori.push(v);
+        localStorage.setItem('kategoriBarang', JSON.stringify(daftarKategori));
+        syncKategoriDropdown(); renderListKategoriModal();
+        document.getElementById('inputKategoriBaru').value = "";
+      }
+    }
+
+    function hapusKategori(index) {
+      if(confirm("Hapus kategori ini?")) {
+        daftarKategori.splice(index, 1);
+        localStorage.setItem('kategoriBarang', JSON.stringify(daftarKategori));
+        syncKategoriDropdown(); renderListKategoriModal();
+      }
+    }
+
+    function editKategori(index) {
+      let v = prompt("Ubah nama kategori:", daftarKategori[index]);
+      if (v && v.trim() !== "") {
+        daftarKategori[index] = v.trim();
+        localStorage.setItem('kategoriBarang', JSON.stringify(daftarKategori));
+        syncKategoriDropdown(); renderListKategoriModal();
+      }
+    }
+  </script>
+</body>
+</html>

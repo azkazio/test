@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#fdfbff">
+  <title>Pengaturan Nota - KasirKu Pro</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  
+  <style>
+    :root {
+      --md-sys-color-primary: #6200ea;
+      --md-sys-color-surface: #fdfbff;
+      --md-sys-color-surface-container: #f3edf7;
+      --md-sys-color-secondary-container: #e8def8;
+    }
+
+    body { margin: 0; background: var(--md-sys-color-surface); height: 100vh; overflow-y: auto; }
+
+    /* Top Bar & Menu */
+    .top-app-bar { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; background: white; z-index: 100; position: sticky; top: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .offcanvas-start { width: 240px !important; border-radius: 0 20px 20px 0; border: none; box-shadow: 5px 0 15px rgba(0,0,0,0.05); }
+    .menu-list { padding: 10px; }
+    .menu-item { display: flex; align-items: center; padding: 10px 16px; color: #444; text-decoration: none; border-radius: 12px; margin-bottom: 4px; transition: 0.2s; font-size: 14px; border: 1px solid transparent; }
+    .menu-item i { margin-right: 12px; font-size: 20px; color: #666; }
+    .menu-item.active { background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-primary); font-weight: bold; border: 1px solid #ddd; }
+    .menu-item.active i { color: var(--md-sys-color-primary); }
+
+    .main-content { padding: 16px; position: relative; }
+    .native-card { background: #ffffff; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 16px; border: 1px solid #f0f0f0; }
+    
+    .native-input { background-color: var(--md-sys-color-surface-container); border: none; border-bottom: 2px solid #79747e; border-radius: 4px 4px 0 0; padding: 12px 16px; width: 100%; outline: none; transition: 0.2s; font-size: 14px; }
+    .native-input:focus { border-bottom-color: var(--md-sys-color-primary); }
+    
+    .upload-box { border: 2px dashed #ccc; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; position: relative; overflow: hidden; background-color: var(--md-sys-color-surface-container); }
+    .upload-box img { max-height: 80px; max-width: 100%; object-fit: contain; }
+    .upload-box input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+    /* PREVIEW NOTA */
+    .receipt-preview { background: white; margin: 0 auto; padding: 15px; color: black; font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.3; border: 1px dashed #ccc; width: 100%; max-width: 300px; }
+    .garis-putus { border-bottom: 1px dashed black; margin: 8px 0; }
+
+    /* Loading Overlay (Hanya dipakai saat tombol Simpan ditekan) */
+    #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999; display: none; }
+
+    /* --- TAMBAHAN: Efek Skeleton Loading SWR --- */
+    .skeleton {
+      background: #e0e0e0 !important;
+      background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%) !important;
+      border-radius: 4px;
+      background-size: 200% 100%;
+      animation: 1.5s shine linear infinite;
+      color: transparent !important;
+      border-bottom: none !important;
+    }
+    .skeleton::placeholder { color: transparent !important; }
+
+    @keyframes shine {
+      to { background-position-x: -200%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loading-screen">
+    <div class="text-center">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-2 fw-bold text-primary" id="loading-text">Menyinkronkan Data...</p>
+    </div>
+  </div>
+
+  <div class="top-app-bar">
+    <div class="d-flex align-items-center">
+      <i class="material-icons" data-bs-toggle="offcanvas" data-bs-target="#menuSidebar" style="cursor:pointer; font-size: 26px; margin-right: 12px;">more_vert</i>
+      <h6 class="m-0 fw-bold">Pengaturan Nota</h6>
+    </div>
+    <button id="btnSimpanCloud" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" onclick="simpanPengaturan()">Simpan Cloud</button>
+  </div>
+  
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="menuSidebar">
+    <div class="offcanvas-header border-bottom py-3">
+      <h5 class="offcanvas-title fw-bold" style="color: var(--md-sys-color-primary); font-size: 18px;">KasirKu Pro</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0 d-flex flex-column">
+      <div class="menu-list" id="menuList"></div>
+      <div class="mt-auto p-3 border-top">
+        <a href="#" class="menu-item text-danger fw-bold" onclick="logout()">
+          <i class="material-icons text-danger">logout</i><span>Keluar Aplikasi</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <ul class="nav nav-pills mb-3 mt-1 nav-fill" id="pills-tab">
+      <li class="nav-item"><button class="nav-link active rounded-pill fw-bold" data-bs-toggle="pill" data-bs-target="#tab-data">Data Toko</button></li>
+      <li class="nav-item"><button class="nav-link rounded-pill fw-bold" data-bs-toggle="pill" data-bs-target="#tab-preview">Preview Nota</button></li>
+    </ul>
+
+    <div class="tab-content" id="pills-tabContent">
+      <div class="tab-pane fade show active" id="tab-data">
+        <div class="native-card">
+          <div class="mb-3">
+            <label class="small text-secondary fw-bold mb-1">Nama Toko</label>
+            <input type="text" id="inputNama" class="native-input swr-target" oninput="updatePreview()">
+          </div>
+          <div class="mb-3">
+            <label class="small text-secondary fw-bold mb-1">Alamat</label>
+            <input type="text" id="inputAlamat" class="native-input swr-target" oninput="updatePreview()">
+          </div>
+          <div class="mb-3">
+            <label class="small text-secondary fw-bold mb-1">WhatsApp / Telp</label>
+            <input type="number" id="inputWA" class="native-input swr-target" oninput="updatePreview()">
+          </div>
+          <div class="mb-3">
+            <label class="small text-secondary fw-bold mb-1">Footer Nota</label>
+            <input type="text" id="inputPesan" class="native-input swr-target" oninput="updatePreview()">
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-6">
+            <div class="native-card p-2 text-center h-100">
+              <label class="small text-secondary fw-bold mb-2">Logo</label>
+              <div class="upload-box swr-target" id="boxLogo">
+                <input type="file" id="uploadLogo" accept="image/*">
+                <img id="previewLogoImg" src="" style="display:none;">
+                <div id="logoPlaceholder"><i class="material-icons text-secondary">add_photo_alternate</i><br><small>Pilih</small></div>
+              </div>
+              <button class="btn btn-sm btn-outline-danger mt-2 w-100 rounded-pill" onclick="hapusGambar('logo')">Hapus</button>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="native-card p-2 text-center h-100">
+              <label class="small text-secondary fw-bold mb-2">QRIS / Barcode</label>
+              <div class="upload-box swr-target" id="boxBarcode">
+                <input type="file" id="uploadBarcode" accept="image/*">
+                <img id="previewBarcodeImg" src="" style="display:none;">
+                <div id="barcodePlaceholder"><i class="material-icons text-secondary">qr_code_2</i><br><small>Pilih</small></div>
+              </div>
+              <button class="btn btn-sm btn-outline-danger mt-2 w-100 rounded-pill" onclick="hapusGambar('barcode')">Hapus</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-preview">
+        <div class="receipt-preview swr-target" id="kertasNota">
+          <div class="text-center mb-2">
+            <img id="pLogo" src="" style="max-height: 45px; display: none; margin: 0 auto 5px auto;">
+            <strong id="pNama" style="font-size: 14px; text-transform: uppercase;">NAMA TOKO</strong><br>
+            <span id="pAlamat" style="font-size: 10px;">Alamat Toko</span><br>
+            <span id="pWA" style="font-size: 10px;">Telp: -</span>
+          </div>
+          <div class="garis-putus"></div>
+          <div class="d-flex justify-content-between" style="font-size: 10px;"><span>01/05/2026</span><span>TRX-123456</span></div>
+          <div class="garis-putus"></div>
+          <div class="d-flex justify-content-between"><span>Produk A x2</span><span>30.000</span></div>
+          <div class="garis-putus"></div>
+          <div class="d-flex justify-content-between fw-bold"><span>TOTAL</span><span>30.000</span></div>
+          <div class="garis-putus"></div>
+          <div class="text-center mt-2 mb-2"><img id="pBarcode" src="" style="max-height: 60px; display: none; margin: 0 auto;"></div>
+          <div class="text-center mt-2" id="pPesan" style="font-size: 10px;">Terima Kasih</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="spreadsheets.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', async () => {
+      const userData = JSON.parse(localStorage.getItem('userData'));
+      if (!userData || userData.role !== "Admin") {
+        window.location.href = "kasir.html";
+        return;
+      }
+      setupMenu(userData.role);
+      
+      // --- OPTIMASI STALE-WHILE-REVALIDATE (SWR) ---
+      const isCached = localStorage.getItem('isSettingsCached') === 'true';
+
+      if (isCached) {
+        // TAHAP 1: Render instan dari HP tanpa loading
+        document.getElementById('inputNama').value = localStorage.getItem('tokoNama') || "";
+        document.getElementById('inputAlamat').value = localStorage.getItem('tokoAlamat') || "";
+        document.getElementById('inputWA').value = localStorage.getItem('tokoWA') || "";
+        document.getElementById('inputPesan').value = localStorage.getItem('tokoPesan') || "";
+        let logo = localStorage.getItem('tokoLogoImg'); if (logo) setGambar('logo', logo);
+        let bc = localStorage.getItem('tokoBarcodeImg'); if (bc) setGambar('barcode', bc);
+        updatePreview();
+
+        // Download dari Cloud secara diam-diam (Background Fetch)
+        muatPengaturanDariCloud();
+      } else {
+        // TAHAP 2: Jika kosong (baru install), berikan efek Skeleton
+        document.querySelectorAll('.swr-target').forEach(el => el.classList.add('skeleton'));
+        
+        // Panggil fetch (API) dan tunggu sampai selesai
+        await muatPengaturanDariCloud();
+      }
+
+      setupImageUpload('uploadLogo', 'logo');
+      setupImageUpload('uploadBarcode', 'barcode');
+    });
+
+    async function muatPengaturanDariCloud() {
+      try {
+        let res = await kirimKeAPI({ action: "getSettings" });
+        
+        // Matikan animasi skeleton jika ada
+        document.querySelectorAll('.swr-target').forEach(el => el.classList.remove('skeleton'));
+
+        if (res && Object.keys(res).length > 0) {
+          // Update Form UI dengan data dari Cloud secara halus
+          document.getElementById('inputNama').value = res.tokoNama || document.getElementById('inputNama').value;
+          document.getElementById('inputAlamat').value = res.tokoAlamat || document.getElementById('inputAlamat').value;
+          document.getElementById('inputWA').value = res.tokoWA || document.getElementById('inputWA').value;
+          document.getElementById('inputPesan').value = res.tokoPesan || document.getElementById('inputPesan').value;
+
+          // Simpan ulang ke Local Cache
+          localStorage.setItem('tokoNama', res.tokoNama || "");
+          localStorage.setItem('tokoAlamat', res.tokoAlamat || "");
+          localStorage.setItem('tokoWA', res.tokoWA || "");
+          localStorage.setItem('tokoPesan', res.tokoPesan || "");
+
+          if (res.tokoLogoImg) { setGambar('logo', res.tokoLogoImg); localStorage.setItem('tokoLogoImg', res.tokoLogoImg); }
+          if (res.tokoBarcodeImg) { setGambar('barcode', res.tokoBarcodeImg); localStorage.setItem('tokoBarcodeImg', res.tokoBarcodeImg); }
+          
+          // Tandai cache sudah ada
+          localStorage.setItem('isSettingsCached', 'true');
+          
+          updatePreview();
+        }
+      } catch(e) {
+        console.error("Gagal sync latar belakang:", e);
+        document.querySelectorAll('.swr-target').forEach(el => el.classList.remove('skeleton'));
+      }
+    }
+
+    async function simpanPengaturan() {
+      const btn = document.getElementById('btnSimpanCloud');
+      const loading = document.getElementById('loading-screen');
+      const textLoad = document.getElementById('loading-text');
+
+      const settings = {
+        tokoNama: document.getElementById('inputNama').value,
+        tokoAlamat: document.getElementById('inputAlamat').value,
+        tokoWA: document.getElementById('inputWA').value,
+        tokoPesan: document.getElementById('inputPesan').value,
+        tokoLogoImg: localStorage.getItem('tokoLogoImg') || "",
+        tokoBarcodeImg: localStorage.getItem('tokoBarcodeImg') || ""
+      };
+
+      textLoad.innerText = "Menyimpan ke Cloud...";
+      loading.style.display = 'flex';
+      btn.disabled = true;
+
+      let res = await kirimKeAPI({ action: "saveSettings", settings: settings });
+      
+      loading.style.display = 'none';
+      btn.disabled = false;
+
+      if (res && res.status === "success") {
+        // Tandai ke sistem bahwa data sudah ada dan tersinkron
+        localStorage.setItem('isSettingsCached', 'true');
+        
+        if(window.navigator.vibrate) window.navigator.vibrate(50);
+        alert("BERHASIL! Pengaturan toko sudah tersimpan di Cloud.");
+      } else {
+        alert("Gagal menyimpan ke cloud. Cek koneksi Anda.");
+      }
+    }
+
+    // FUNGSI KOMPRESI GAMBAR OTOMATIS (Supaya muat di Google Sheets)
+    function setupImageUpload(inputId, type) {
+      document.getElementById(inputId).addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = function() {
+              // Canvas Kompresi
+              const canvas = document.createElement("canvas");
+              const MAX_WIDTH = 250; // Resize agar sangat kecil
+              const scaleSize = MAX_WIDTH / img.width;
+              canvas.width = MAX_WIDTH;
+              canvas.height = img.height * scaleSize;
+              
+              const ctx = canvas.getContext("2d");
+              // Background putih untuk transparan PNG
+              ctx.fillStyle = "#FFFFFF"; 
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              
+              // Convert ke JPG dengan kompresi 70%
+              const base64Str = canvas.toDataURL("image/jpeg", 0.7);
+              
+              setGambar(type, base64Str);
+              localStorage.setItem(type === 'logo' ? 'tokoLogoImg' : 'tokoBarcodeImg', base64Str);
+            };
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    function updatePreview() {
+      document.getElementById('pNama').innerText = document.getElementById('inputNama').value || "NAMA TOKO";
+      document.getElementById('pAlamat').innerText = document.getElementById('inputAlamat').value || "Alamat Toko";
+      document.getElementById('pWA').innerText = "Telp: " + (document.getElementById('inputWA').value || "-");
+      document.getElementById('pPesan').innerText = document.getElementById('inputPesan').value || "Terima Kasih";
+    }
+
+    function setGambar(type, base64Str) {
+      const imgId = type === 'logo' ? 'previewLogoImg' : 'previewBarcodeImg';
+      const placeholderId = type === 'logo' ? 'logoPlaceholder' : 'barcodePlaceholder';
+      const previewStrukId = type === 'logo' ? 'pLogo' : 'pBarcode';
+      
+      document.getElementById(imgId).src = base64Str; document.getElementById(imgId).style.display = 'block';
+      document.getElementById(placeholderId).style.display = 'none';
+      document.getElementById(previewStrukId).src = base64Str; document.getElementById(previewStrukId).style.display = 'block';
+    }
+
+    function hapusGambar(type) {
+      localStorage.removeItem(type === 'logo' ? 'tokoLogoImg' : 'tokoBarcodeImg');
+      location.reload();
+    }
+
+    function setupMenu(role) {
+      document.getElementById('menuList').innerHTML = `
+        <a href="dashboard.html" class="menu-item"><i class="material-icons">home</i>Dashboard</a>
+        <a href="kasir.html" class="menu-item"><i class="material-icons">point_of_sale</i>Mesin Kasir</a>
+        <a href="riwayat.html" class="menu-item"><i class="material-icons">receipt_long</i>Riwayat</a>
+        <a href="stok.html" class="menu-item"><i class="material-icons">inventory_2</i>Stok Barang</a>
+        <a href="nota.html" class="menu-item active"><i class="material-icons">settings</i>Setting Nota</a>
+      `;
+    }
+
+    function logout() { if(confirm("Keluar?")) { localStorage.clear(); window.location.href = "index.html"; } }
+  </script>
+</body>
+</html>
